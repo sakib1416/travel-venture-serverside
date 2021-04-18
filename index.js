@@ -18,6 +18,7 @@ client.connect(err => {
   const serviceCollection = client.db(`${process.env.DB_NAME}`).collection("services");
   const reviewCollection = client.db(`${process.env.DB_NAME}`).collection("reviews");
   const orderCollection = client.db(`${process.env.DB_NAME}`).collection("orders");
+  const adminCollection = client.db(`${process.env.DB_NAME}`).collection("admins");
 
   app.post("/addReviews", (req,res) => {
       const review = req.body;
@@ -72,6 +73,14 @@ client.connect(err => {
         res.send(documents);
     })
   });
+
+  app.post("/addAdmin", (req,res) => {
+      const admin = req.body;
+    adminCollection.insertOne(admin)
+    .then(result => {
+        res.send(result.insertedCount > 0)
+    })
+  })
 
   console.log("Database connected checked");
 });
