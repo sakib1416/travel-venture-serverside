@@ -4,6 +4,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
+const ObjectID = require('mongodb').ObjectID;
 
 
 app.use(cors());
@@ -16,6 +17,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 client.connect(err => {
   const serviceCollection = client.db(`${process.env.DB_NAME}`).collection("services");
   const reviewCollection = client.db(`${process.env.DB_NAME}`).collection("reviews");
+  const orderCollection = client.db(`${process.env.DB_NAME}`).collection("orders");
 
   app.post("/addReviews", (req,res) => {
       const review = req.body;
@@ -44,6 +46,30 @@ client.connect(err => {
     serviceCollection.find().sort( { created : -1}).limit(3)
     .toArray((err, documents) => {
         res.send(documents)
+    })
+  });
+
+  app.get("/service/:id", (req,res) => {
+      const id = ObjectID(req.params.id);
+      serviceCollection.findOne({_id: id})
+      .then(result => {
+          res.send(result);
+      })
+  });
+
+  app.post("/addOrder", (req,res) => {
+      const newOrder = req.body;
+      console.log(newOrder);
+      orderCollection.insertOne(newOrder)
+      .then(result => {
+          res.send(result.insertedCount>0)
+      })
+  });
+
+  app.get("/orders", (req,res) => {
+    orderCollection.find()
+    .toArray((err, documents) => {
+        res.send(documents);
     })
   });
 
