@@ -75,10 +75,18 @@ client.connect(err => {
   });
 
   app.post("/addAdmin", (req,res) => {
-      const admin = req.body;
+    const admin = req.body.email;
     adminCollection.insertOne(admin)
     .then(result => {
         res.send(result.insertedCount > 0)
+    })
+  });
+
+  app.post("/isAdmin", (req,res) => {
+      const admin = req.body.email;
+    adminCollection.findOne({email: admin})
+    .then(result => {
+        res.send(result);
     })
   })
 
