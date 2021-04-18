@@ -26,11 +26,27 @@ client.connect(err => {
   });
 
   app.get("/reviews", (req,res) => {
-    reviewCollection.find()
+    reviewCollection.find().sort( { posted : -1}).limit(3)
     .toArray((err, documents) => {
         res.send(documents);
     })
-  })
+  });
+
+  app.post("/addService", (req,res) => {
+      const service = req.body;
+    serviceCollection.insertOne(service)
+    .then(result => {
+        res.send(result.insertedCount > 0)
+    })
+  });
+
+  app.get("/services", (req,res) => {
+    serviceCollection.find().sort( { created : -1}).limit(3)
+    .toArray((err, documents) => {
+        res.send(documents)
+    })
+  });
+
   console.log("Database connected checked");
 });
 
