@@ -95,7 +95,7 @@ client.connect(err => {
 
 
 app.get("/", (req,res) => {
-    res.send("Hello from the server side assignment");
+    res.send("Hello from the server side assignment checking for git");
 });
 
 
