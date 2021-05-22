@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
+//const { ObjectID } = require('bson');
 
 
 app.use(cors());
@@ -44,12 +45,33 @@ client.connect(err => {
   });
 
   app.get("/services", (req,res) => {
+      //sorting with the most recent
     serviceCollection.find().sort( { created : -1}).limit(3)
     .toArray((err, documents) => {
         res.send(documents)
     })
   });
 
+  //updating a service
+  app.patch("/update/:id", (req,res) => {
+      console.log(req.body);
+      const id = ObjectID(req.params.id);
+      //be careful with the $set
+      serviceCollection.updateOne({_id: id}, {
+          $set: {packageName: req.body.name, packagePrice: req.body.price, packageDescription: req.body.description}
+      })
+      .then(result => res.send(result))
+  })
+
+  //deleting a service
+  app.delete("/delete/:id", (req,res) => {
+    const id = ObjectID(req.params.id);
+    console.log('delete this', id);
+    serviceCollection.deleteOne({_id: id})
+    .then(documents => res.send(!!documents.value))
+  })
+
+  //showing a single service
   app.get("/service/:id", (req,res) => {
       const id = ObjectID(req.params.id);
       serviceCollection.findOne({_id: id})
@@ -57,6 +79,8 @@ client.connect(err => {
           res.send(result);
       })
   });
+
+  
 
   app.post("/addOrder", (req,res) => {
       const newOrder = req.body;
@@ -74,6 +98,32 @@ client.connect(err => {
     })
   });
 
+  //deleting a review
+  app.delete("/delete/review/:id", (req,res) => {
+      const id = ObjectID(req.params.id);
+      reviewCollection.deleteOne({_id: id})
+      .then(result => {
+          console.log(result)
+          res.send(!!result.value)
+      })
+  })
+
+  //showing a single review
+  app.get("/review/:id", (req,res) => {
+      const id = ObjectID(req.params.id);
+      reviewCollection.findOne({_id: id})
+      .then(result => res.send(result));
+  })
+
+  //updating review
+  app.patch("/update/review/:id", (req,res) => {
+      const id = ObjectID(req.params.id);
+      reviewCollection.updateOne({_id: id}, 
+        {$set: {name: req.body.name, country: req.body.country, review: req.body.review}
+      })
+      .then(result => res.send(result.modifiedCount > 0))
+  })
+
   app.post("/addAdmin", (req,res) => {
     const admin = req.body.email;
     adminCollection.insertOne(admin)
@@ -90,8 +140,12 @@ client.connect(err => {
     })
   })
 
+    //delete service
+    
   console.log("Database connected checked");
 });
+
+
 
 
 app.get("/", (req,res) => {
