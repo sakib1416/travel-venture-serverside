@@ -140,6 +140,12 @@ client.connect(err => {
     })
   })
 
+  app.get("/single/service/:id", (req,res) => {
+      const id = ObjectID(req.params.id);
+      serviceCollection.findOne({_id: id})
+      .then(result => res.send(result));
+  })
+
     //delete service
     
   console.log("Database connected checked");
