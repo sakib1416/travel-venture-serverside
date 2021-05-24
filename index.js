@@ -132,7 +132,7 @@ client.connect(err => {
       reviewCollection.deleteOne({_id: id})
       .then(result => {
           console.log(result)
-          res.send(!!result.value)
+          res.send(!!result.value);
       })
   })
 
