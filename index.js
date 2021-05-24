@@ -5,12 +5,18 @@ const bodyParser = require('body-parser');
 require('dotenv').config();
 const MongoClient = require('mongodb').MongoClient;
 const ObjectID = require('mongodb').ObjectID;
+const fileUpload = require('express-fileupload');
 //const { ObjectID } = require('bson');
 
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+//file upload images for admins
+app.use(express.static('admins'));
+app.use(fileUpload());
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.yfcjm.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -27,6 +33,28 @@ client.connect(err => {
       .then(result => {
           res.send(result.insertedCount > 0);
       })
+  });
+
+  app.post("/addAdmin", (req,res) => {
+      //accessing the uploaded file from req.files
+    const file = req.files.file;
+    const name = req.body.name;
+    const email = req.body.email;
+    const img = file.name;
+    const admin = {name, email, img}
+    console.log(name, email, file);
+    //moving the file to admins folder in the directory 
+    file.mv(`${__dirname}/admins/${file.name}`, (err) => {
+        if(err){
+            console.log(err);
+            return res.status(500).send({msg: "failed to upload the image"})
+        }
+        return res.send({name: file.name, path: `/${file.name}`})
+    })
+    adminCollection.insertOne(admin)
+    .then(result => {
+        res.send(result.insertedCount > 0);
+    })
   });
 
   app.get("/reviews", (req,res) => {
@@ -124,12 +152,12 @@ client.connect(err => {
       .then(result => res.send(result.modifiedCount > 0))
   })
 
-  app.post("/addAdmin", (req,res) => {
-    const admin = req.body.email;
-    adminCollection.insertOne(admin)
-    .then(result => {
-        res.send(result.insertedCount > 0)
-    })
+  
+  app.get("/admins", (req,res) => {
+      adminCollection.find()
+      .toArray((err, documents) => {
+        res.send(documents);
+    });
   });
 
   app.post("/isAdmin", (req,res) => {
