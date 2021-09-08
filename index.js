@@ -26,6 +26,7 @@ client.connect(err => {
   const reviewCollection = client.db(`${process.env.DB_NAME}`).collection("reviews");
   const orderCollection = client.db(`${process.env.DB_NAME}`).collection("orders");
   const adminCollection = client.db(`${process.env.DB_NAME}`).collection("admins");
+  const userCollection = client.db(`${process.env.DB_NAME}`).collection("users");
 
   app.post("/addReviews", (req,res) => {
       const review = req.body;
@@ -36,24 +37,11 @@ client.connect(err => {
   });
 
   app.post("/addAdmin", (req,res) => {
-      //accessing the uploaded file from req.files
-    const file = req.files.file;
-    const name = req.body.name;
-    const email = req.body.email;
-    const img = file.name;
-    const admin = {name, email, img}
-    console.log(name, email, file);
-    //moving the file to admins folder in the directory 
-    file.mv(`${__dirname}/admins/${file.name}`, (err) => {
-        if(err){
-            console.log(err);
-            return res.status(500).send({msg: "failed to upload the image"})
-        }
-        return res.send({name: file.name, path: `/${file.name}`})
-    })
-    adminCollection.insertOne(admin)
-    .then(result => {
-        res.send(result.insertedCount > 0);
+     const admin = req.body;
+     console.log(admin);
+     userCollection.insertOne(admin)
+     .then(result => {
+        res.send(result.insertedCount > 0)
     })
   });
 
@@ -71,6 +59,16 @@ client.connect(err => {
         res.send(result.insertedCount > 0)
     })
   });
+
+  // adding a user
+  app.post("/addUser", (req,res) => {
+    const user = req.body;
+    console.log(user);
+  userCollection.insertOne(user)
+  .then(result => {
+      res.send(result.insertedCount > 0)
+  })
+});
 
   app.get("/services", (req,res) => {
       //sorting with the most recent
@@ -119,8 +117,9 @@ client.connect(err => {
       })
   });
 
-  app.get("/orders", (req,res) => {
-    orderCollection.find()
+  app.post("/orders", (req,res) => {
+      const orderEmail = req.body.email;
+    orderCollection.find({'user.email': orderEmail})
     .toArray((err, documents) => {
         res.send(documents);
     })
@@ -162,8 +161,9 @@ client.connect(err => {
 
   app.post("/isAdmin", (req,res) => {
       const admin = req.body.email;
-    adminCollection.findOne({email: admin})
+      userCollection.findOne({email: admin}, {isAdmin: true})
     .then(result => {
+        console.log(result);
         res.send(result);
     })
   })
