@@ -45,12 +45,31 @@ client.connect(err => {
     })
   });
 
+  //fetching the latest 3 reviews
   app.get("/reviews", (req,res) => {
     reviewCollection.find().sort( { posted : -1}).limit(3)
     .toArray((err, documents) => {
         res.send(documents);
     })
   });
+
+  //fetching reviews for a particular service
+  app.get("/services/reviews/:id", (req,res) => {
+    const id = req.params.id;
+    reviewCollection.find({serviceID: id}).sort( { posted : -1})
+    .toArray((err, documents) => {
+      res.send(documents);
+  })
+  })
+
+  //fetching reviews for a particular user
+  app.post("/user/reviews", (req,res) => {
+    const userEmail = req.body.email;
+    reviewCollection.find({reviewerEmail: userEmail})
+    .toArray((err,documents) => {
+      res.send(documents);
+    })
+  })
 
   app.post("/addService", (req,res) => {
       const service = req.body;
@@ -117,6 +136,7 @@ client.connect(err => {
       })
   });
 
+  //looking for orders for a particular user
   app.post("/orders", (req,res) => {
       const orderEmail = req.body.email;
     orderCollection.find({'user.email': orderEmail})
@@ -124,6 +144,23 @@ client.connect(err => {
         res.send(documents);
     })
   });
+
+//looking for orders for a particular user
+  app.post("/order", (req,res) => {
+    const userEmail = req.body.userEmail;
+    const orderID = req.body.orderID;
+    // console.log(userEmail, orderID);
+    orderCollection.findOne({
+      $and: [
+        {'user.email': userEmail},
+        {'product._id': orderID}
+      ]
+    })
+    .then(result => {
+      // console.log(result)
+      res.send(result);
+    })
+  })
 
   //deleting a review
   app.delete("/delete/review/:id", (req,res) => {
